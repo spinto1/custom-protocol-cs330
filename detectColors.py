@@ -5,67 +5,83 @@ import numpy as np
 # capturing video of webcam
 webcam = cv2.VideoCapture(0)
 
-while True:
 
+# takes RGB input and create HSV range for color
+# source: https://stackoverflow.com/questions/36817133/identifying-the-range-of-a-color-in-hsv-using-opencv
+def set_color_range(bgr_color_value):
+    color = np.uint8([[bgr_color_value]])
+    hsv_color = cv2.cvtColor(color, cv2.COLOR_RGB2HSV)
+
+    lower_bound = hsv_color[0][0][0] - 10, 100, 100
+    upper_bound = hsv_color[0][0][0] + 10, 255, 255
+
+    return np.array(lower_bound), np.array(upper_bound)
+
+
+# create color masks
+def create_mask(src, lower, upper):
+    mask = cv2.inRange(src, lower, upper)
+    return mask
+
+
+# determine dominant color in frame
+def detect_dominant_color(b_mask, g_mask, r_mask, y_mask):
+    # calculating size of masks
+    b_size = cv2.countNonZero(b_mask)
+    g_size = cv2.countNonZero(g_mask)
+    r_size = cv2.countNonZero(r_mask)
+    y_size = cv2.countNonZero(y_mask)
+
+    mask_sizes = [b_size, g_size, r_size, y_size]
+    max_color = max(mask_sizes)
+
+    # identify dominant color mask
+    if max_color == b_size:
+        output = cv2.bitwise_and(frame, frame, mask=b_mask)
+        print("blue is dominant")
+        return output
+
+    if max_color == g_size:
+        output = cv2.bitwise_and(frame, frame, mask=g_mask)
+        print("green is dominant")
+        return output
+
+    if max_color == r_size:
+        output = cv2.bitwise_and(frame, frame, mask=r_mask)
+        print("red is dominant")
+        return output
+
+    if max_color == y_size:
+        output = cv2.bitwise_and(frame, frame, mask=y_mask)
+        print("yellow is dominant")
+        return output
+
+
+while True:
     # read frame of webcam
     ret, frame = webcam.read()
-    width = int(webcam.get(3))
-    height = int(webcam.get(4))
 
     # convert frame to HSV
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    # set color range of blue
-    lower_blue = np.array([90, 50, 50])
-    upper_blue = np.array([130, 255, 255])
+    # set color ranges
+    lower_blue, upper_blue = set_color_range([0, 130, 200])
+    lower_green, upper_green = set_color_range([60, 180, 75])
+    lower_red, upper_red = set_color_range([230, 25, 75])
+    lower_yellow, upper_yellow = set_color_range([255, 225, 25])
 
-    # set color range of white
-    lower_white = np.array([0, 0, 0])
-    upper_white = np.array([0, 0, 255])
+    # creating color masks
+    blue_mask = create_mask(hsv, lower_blue, upper_blue)
+    green_mask = create_mask(hsv, lower_green, upper_green)
+    red_mask = create_mask(hsv, lower_red, upper_red)
+    yellow_mask = create_mask(hsv, lower_yellow, upper_yellow)
 
-    # set color range of red
-    lower_red = np.array([136, 87, 111])
-    upper_red = np.array([180, 255, 255])
+    result = detect_dominant_color(blue_mask, green_mask, red_mask, yellow_mask)
 
-    # set color range of black
-    lower_black = np.array([0, 0, 0])
-    upper_black = np.array([255, 255, 0])
-
-    # creating masks for each color
-    blue_mask = cv2.inRange(hsv, lower_blue, upper_blue)
-    white_mask = cv2.inRange(hsv, lower_white, lower_white)
-    red_mask = cv2.inRange(hsv, lower_red, upper_red)
-    black_mask = cv2.inRange(hsv, lower_black, upper_black)
-
-    # calculating sizes of masks
-    blue_size = cv2.countNonZero(blue_mask)
-    white_size = cv2.countNonZero(white_mask)
-    red_size = cv2.countNonZero(red_mask)
-    black_size = cv2.countNonZero(black_mask)
-
-    # identify which color is most dominant and store value
-    sizes = [blue_size, white_size, red_size, black_size]
-    max_value = max(sizes)
-
-    # print out dominant color
-    if max_value == blue_size:
-        result = cv2.bitwise_and(frame, frame, mask=blue_mask)
-        print("blue is dominant")
-
-    if max_value == white_size:
-        result = cv2.bitwise_and(frame, frame, mask=white_mask)
-        print("white is dominant")
-
-    if max_value == red_size:
-        result = cv2.bitwise_and(frame, frame, mask=red_mask)
-        print("red is dominant")
-
-    else:
-        result = cv2.bitwise_and(frame, frame, mask=black_mask)
-        print("black is dominant")
-
+    # displaying color detection for testing purposes
     cv2.imshow('Frame', result)
 
+    # kill program by pressing "q" key
     if cv2.waitKey(1) == ord('q'):
         break
 
