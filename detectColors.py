@@ -35,26 +35,24 @@ def detect_dominant_color(b_mask, g_mask, r_mask, y_mask):
     mask_sizes = [b_size, g_size, r_size, y_size]
     max_color = max(mask_sizes)
 
-    # identify dominant color mask
-    if max_color == b_size:
-        output = cv2.bitwise_and(frame, frame, mask=b_mask)
-        print("blue is dominant")
-        return output
+    if b_size > 0:
+        print("Blue detected")
 
-    if max_color == g_size:
-        output = cv2.bitwise_and(frame, frame, mask=g_mask)
-        print("green is dominant")
-        return output
+    if g_size > 0:
+        print("Green detected")
 
-    if max_color == r_size:
-        output = cv2.bitwise_and(frame, frame, mask=r_mask)
-        print("red is dominant")
-        return output
+    if r_size > 0:
+        print("Red detected")
 
-    if max_color == y_size:
-        output = cv2.bitwise_and(frame, frame, mask=y_mask)
-        print("yellow is dominant")
-        return output
+    if y_size > 0:
+        print("Yellow detected")
+
+    b_output = cv2.bitwise_and(frame, frame, mask=b_mask)
+    g_output = cv2.bitwise_and(frame, frame, mask=g_mask)
+    r_output = cv2.bitwise_and(frame, frame, mask=r_mask)
+    y_output = cv2.bitwise_and(frame, frame, mask=y_mask)
+
+    return b_output, g_output, r_output, y_output
 
 
 while True:
@@ -76,10 +74,17 @@ while True:
     red_mask = create_mask(hsv, lower_red, upper_red)
     yellow_mask = create_mask(hsv, lower_yellow, upper_yellow)
 
-    result = detect_dominant_color(blue_mask, green_mask, red_mask, yellow_mask)
+    b_result, g_result, r_result, y_result = detect_dominant_color(blue_mask, green_mask, red_mask, yellow_mask)
 
     # displaying color detection for testing purposes
-    cv2.imshow('Frame', result)
+    cv2.imshow('Red', b_result)
+    cv2.imshow('Green', g_result)
+    cv2.imshow('Red', r_result)
+    cv2.imshow('Yellow', yellow_mask)
+
+    # wait 5 seconds between each iteration for testing purposes
+    time.sleep(5)
+    print("-------------")
 
     # kill program by pressing "q" key
     if cv2.waitKey(1) == ord('q'):
