@@ -1,7 +1,6 @@
 from tkinter import *
-import binascii
 
-scale = 550  # Interface size in pixels
+scale = 1200  # Interface size in pixels
 
 
 # Function used to update single frame in Tkinter window using gathered binary data
@@ -31,26 +30,26 @@ def multi_color_clock(arr):
 # Color Sources: https://sashamaps.net/docs/resources/20-colors/
 color_mapping = {
     "ST": "#911eb4",  # Purple
-    "EN": "#9A6324",  # Brown
+    "EN": "#911eb4",  # Use purple again! Ended up working out very well
     "00": "#3cb44c",  # Green
     "01": "#e6194B",  # Red
     "10": "#4363d8",  # Blue
     "11": "#ffe119"   # Yellow
 }
 
-# Create Tkinter interface of 200x200 size
+# Create Tkinter interface
 root = Tk()
-root.geometry("{}x{}".format(scale, scale))  # Can change size at top of code
+root.geometry("{}x{}".format(int(scale*1.5), scale))  # Can change size at top of code
 
 # Create Tkinter frames
-f1 = Frame(root, width=scale/2, height=scale/2, bg='#ffffff')
+f1 = Frame(root, width=int(scale*1.5), height=scale/2, bg='#ffffff')
 f1.place(x=0, y=0)
-f2 = Frame(root, width=scale/2, height=scale/2, bg="#ffffff")
-f2.place(x=scale/2, y=0)
-f3 = Frame(root, width=scale/2, height=scale/2, bg="#ffffff")
+f2 = Frame(root, width=int(scale*1.5), height=scale/2, bg="#ffffff")
+f2.place(x=int(scale*1.5)/2, y=0)
+f3 = Frame(root, width=int(scale*1.5), height=scale/2, bg="#ffffff")
 f3.place(x=0, y=scale/2)
-f4 = Frame(root, width=scale/2, height=scale/2, bg="#ffffff")
-f4.place(x=scale/2, y=scale/2)
+f4 = Frame(root, width=int(scale*1.5), height=scale/2, bg="#ffffff")
+f4.place(x=int(scale*1.5)/2, y=scale/2)
 
 frames = [f1, f2, f3, f4]
 
@@ -58,11 +57,20 @@ frames = [f1, f2, f3, f4]
 text = input('What to convert? ')
 bytes_map = list(map(bin, bytearray(text, 'ascii')))
 
+# Create array of 2-bit groupings of the ASCII binary message with checksum
 half_bytes_array = []  # Start with DLE STX
 for byte in bytes_map:
     b = byte[2:]
-    while len(b) < 8:
+    while len(b) < 7:
         b = '0' + b
+    # Add checksum:
+    # If even number of 1's, first bit will be 1
+    # If  odd number of 1's, first bit will be 0
+    zero_count = b.count('0')
+    checksum = zero_count % 2
+    b = str(checksum) + b
+
+    # Append byte to array containing 2 bits at a time
     for i in range(int(len(b)/2)):
         half_bytes_array.append(b[i*2:i*2+2])
 
@@ -70,14 +78,16 @@ for byte in bytes_map:
 start_frame = ["ST"] * 4
 end_frame = ["EN"] * 4
 
-print(start_frame)
 # Create full message including starting and ending frame
 full_message = start_frame[:]
-full_message.extend(half_bytes_array)
+full_message.extend(half_bytes_array*2)
+full_message.extend(half_bytes_array[-4:])
 full_message.extend(end_frame)
 
+print(half_bytes_array)
+
 # Visualize binary
-print(' '.join(bytes_map))
+print(''.join(full_message[4:-4]))
 print(' '.join(full_message))
 
 # Call clock function to display binary data with Tkinter interface
