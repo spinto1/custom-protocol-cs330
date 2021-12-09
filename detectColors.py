@@ -229,8 +229,8 @@ bytes_array = []
 for index in range(0, len(binary_data), 8):
     bytes_array.append(binary_data[index:index + 8])
 
-first_half = bytes_array[-len(bytes_array) // 2:]
-second_half = bytes_array[:-len(bytes_array) // 2]
+first_half = bytes_array[:len(bytes_array) // 2]
+second_half = bytes_array[len(bytes_array) // 2:]  
 
 print(len(first_half), first_half)
 print(len(second_half), second_half)
@@ -245,15 +245,7 @@ for i in range(len(first_half)):
 
 print('Detected message:', converted_message)
 
-converted_message = ''
-for i in range(len(second_half)):
-    if check_checksum(second_half[i]):
-        converted_message += decode_binary(second_half[i][1:])
-    else:
-        if check_checksum(first_half[i]):
-            converted_message += decode_binary(first_half[i][1:])
-print('Detected message:', converted_message)
-
 # cleanup
 webcam.release()
 cv2.destroyAllWindows()
+
