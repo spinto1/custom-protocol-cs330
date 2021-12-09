@@ -81,7 +81,6 @@ end_frame = ["EN"] * 4
 # Create full message including starting and ending frame
 full_message = start_frame[:]
 full_message.extend(half_bytes_array*2)
-full_message.extend(half_bytes_array[-4:])
 full_message.extend(end_frame)
 
 print(half_bytes_array)
